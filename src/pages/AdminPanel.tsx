@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useUBS } from '@/hooks/useUBS';
+import { useUserManagement } from '@/hooks/useUserManagement';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
@@ -17,12 +18,16 @@ import {
   Building2, 
   FileText, 
   Users,
-  Settings
+  Settings,
+  Trash2,
+  UserMinus,
+  AlertTriangle
 } from 'lucide-react';
 
 const AdminPanel = () => {
   const { user, signOut, isAdmin } = useAuth();
   const { ubsList, createUBS, loading } = useUBS();
+  const { users, userUBSAssignments, createUser, deleteUser, unlinkUserFromUBS, deleteUBS } = useUserManagement();
   const { toast } = useToast();
   const [newUBS, setNewUBS] = useState({
     name: '',
@@ -31,6 +36,13 @@ const AdminPanel = () => {
     email: '',
     responsible_person: '',
     operating_hours: ''
+  });
+
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+    ubsId: ''
   });
 
   const handleSignOut = async () => {
@@ -62,6 +74,93 @@ const AdminPanel = () => {
         operating_hours: ''
       });
     }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await createUser(newUser);
+    
+    if (error) {
+      toast({
+        title: "Erro",
+        description: error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Sucesso",
+        description: "Usuário criado e vinculado à UBS com sucesso!",
+      });
+      setNewUser({
+        email: '',
+        password: '',
+        fullName: '',
+        ubsId: ''
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (confirm(`Tem certeza que deseja excluir o usuário ${userName}? Esta ação não pode ser desfeita.`)) {
+      const { error } = await deleteUser(userId);
+      
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Usuário excluído com sucesso!",
+        });
+      }
+    }
+  };
+
+  const handleUnlinkUser = async (userId: string, userName: string) => {
+    if (confirm(`Tem certeza que deseja desvincular o usuário ${userName} da UBS?`)) {
+      const { error } = await unlinkUserFromUBS(userId);
+      
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "Usuário desvinculado da UBS com sucesso!",
+        });
+      }
+    }
+  };
+
+  const handleDeleteUBS = async (ubsId: string, ubsName: string) => {
+    if (confirm(`Tem certeza que deseja excluir a UBS ${ubsName}? Todos os documentos e vínculos serão removidos. Esta ação não pode ser desfeita.`)) {
+      const { error } = await deleteUBS(ubsId);
+      
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: "UBS excluída com sucesso!",
+        });
+      }
+    }
+  };
+
+  // Get available UBS for user assignment (those without assigned users)
+  const getAvailableUBS = () => {
+    const assignedUBSIds = userUBSAssignments.map(assignment => assignment.ubs_id);
+    return ubsList.filter(ubs => !assignedUBSIds.includes(ubs.id));
   };
 
   if (!isAdmin) {
@@ -267,22 +366,35 @@ const AdminPanel = () => {
                 <CardContent>
                   {ubsList.length > 0 ? (
                     <div className="space-y-4">
-                      {ubsList.map((ubs) => (
-                        <div key={ubs.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold">{ubs.name}</h3>
-                              <p className="text-sm text-muted-foreground">{ubs.address}</p>
-                              {ubs.responsible_person && (
-                                <p className="text-sm">Responsável: {ubs.responsible_person}</p>
-                              )}
-                            </div>
-                            <Badge variant={ubs.active ? "default" : "secondary"}>
-                              {ubs.active ? "Ativa" : "Inativa"}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
+                       {ubsList.map((ubs) => (
+                         <div key={ubs.id} className="border rounded-lg p-4">
+                           <div className="flex justify-between items-start">
+                             <div className="flex-1">
+                               <h3 className="font-semibold">{ubs.name}</h3>
+                               <p className="text-sm text-muted-foreground">{ubs.address}</p>
+                               {ubs.responsible_person && (
+                                 <p className="text-sm">Responsável: {ubs.responsible_person}</p>
+                               )}
+                               <p className="text-xs text-muted-foreground mt-1">
+                                 Documentos: {ubs.documents?.length || 0}
+                               </p>
+                             </div>
+                             <div className="flex items-center space-x-2">
+                               <Badge variant={ubs.active ? "default" : "secondary"}>
+                                 {ubs.active ? "Ativa" : "Inativa"}
+                               </Badge>
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => handleDeleteUBS(ubs.id, ubs.name)}
+                                 className="text-destructive hover:text-destructive"
+                               >
+                                 <Trash2 className="w-4 h-4" />
+                               </Button>
+                             </div>
+                           </div>
+                         </div>
+                       ))}
                     </div>
                   ) : (
                     <p className="text-center text-muted-foreground py-8">
@@ -311,19 +423,178 @@ const AdminPanel = () => {
           </TabsContent>
 
           <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerenciar Usuários</CardTitle>
-                <CardDescription>
-                  Gestão de usuários e permissões do sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center py-8 text-muted-foreground">
-                  Funcionalidade de gestão de usuários será implementada aqui
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Create New User */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Criar Novo Usuário</CardTitle>
+                  <CardDescription>
+                    Adicione um novo usuário e vincule a uma UBS
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleCreateUser} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="userEmail">Email *</Label>
+                        <Input
+                          id="userEmail"
+                          type="email"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                          placeholder="usuario@email.com"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="userPassword">Senha *</Label>
+                        <Input
+                          id="userPassword"
+                          type="password"
+                          value={newUser.password}
+                          onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                          placeholder="Senha temporária"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="userFullName">Nome Completo *</Label>
+                      <Input
+                        id="userFullName"
+                        value={newUser.fullName}
+                        onChange={(e) => setNewUser({...newUser, fullName: e.target.value})}
+                        placeholder="Nome completo do usuário"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="userUBS">UBS *</Label>
+                      <Select value={newUser.ubsId} onValueChange={(value) => setNewUser({...newUser, ubsId: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma UBS" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getAvailableUBS().map((ubs) => (
+                            <SelectItem key={ubs.id} value={ubs.id}>
+                              {ubs.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {getAvailableUBS().length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Todas as UBS já possuem usuários vinculados
+                        </p>
+                      )}
+                    </div>
+
+                    <Button type="submit" disabled={loading || getAvailableUBS().length === 0}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Criar Usuário
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* User Management */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Usuários Cadastrados ({users.length})</CardTitle>
+                  <CardDescription>
+                    Gerencie os usuários e suas atribuições de UBS
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {userUBSAssignments.length > 0 ? (
+                    <div className="space-y-4">
+                      {userUBSAssignments.map((assignment) => (
+                        <div key={assignment.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">{assignment.profiles.full_name}</h3>
+                              <p className="text-sm text-muted-foreground">{assignment.profiles.email}</p>
+                              <p className="text-sm">
+                                <Building2 className="w-4 h-4 inline mr-1" />
+                                Vinculado à: {assignment.ubs.name}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUnlinkUser(assignment.user_id, assignment.profiles.full_name)}
+                                className="text-orange-600 hover:text-orange-700"
+                              >
+                                <UserMinus className="w-4 h-4 mr-1" />
+                                Desvincular
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteUser(assignment.user_id, assignment.profiles.full_name)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhum usuário cadastrado ainda
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Unlinked Users */}
+              {users.filter(user => !userUBSAssignments.find(a => a.user_id === user.user_id)).length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-orange-600">
+                      <AlertTriangle className="w-5 h-5 mr-2" />
+                      Usuários Não Vinculados
+                    </CardTitle>
+                    <CardDescription>
+                      Usuários sem UBS atribuída
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {users
+                        .filter(user => !userUBSAssignments.find(a => a.user_id === user.user_id))
+                        .map((user) => (
+                        <div key={user.id} className="border rounded-lg p-4 bg-orange-50">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">{user.full_name}</h3>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                              <p className="text-sm text-orange-600">Sem UBS atribuída</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user.user_id, user.full_name || user.email)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Excluir
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
