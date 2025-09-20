@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* SUS Health System Design - Verde escuro e branco */
+    --background: 0 0% 98%;
+    --foreground: 130 60% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 130 60% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 130 60% 12%;
+
+    /* Verde escuro do SUS como primary */
+    --primary: 130 60% 15%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Verde mais claro para secondary */
+    --secondary: 130 30% 92%;
+    --secondary-foreground: 130 60% 15%;
+
+    --muted: 130 15% 95%;
+    --muted-foreground: 130 30% 45%;
+
+    /* Verde médio para accent */
+    --accent: 130 40% 85%;
+    --accent-foreground: 130 60% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 130 20% 88%;
+    --input: 130 20% 88%;
+    --ring: 130 60% 15%;
+
+    /* Gradientes temáticos */
+    --gradient-primary: linear-gradient(135deg, hsl(130 60% 15%), hsl(130 50% 25%));
+    --gradient-hero: linear-gradient(135deg, hsl(130 60% 15%), hsl(130 50% 30%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(130 15% 97%));
+    
+    /* Sombras elegantes */
+    --shadow-sus: 0 4px 20px -4px hsl(130 60% 15% / 0.15);
+    --shadow-card: 0 2px 15px -3px hsl(130 40% 20% / 0.1);
+    --shadow-hover: 0 8px 30px -8px hsl(130 60% 15% / 0.25);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Verde escuro adaptado para dark mode */
+    --background: 130 30% 8%;
+    --foreground: 130 15% 95%;
+
+    --card: 130 25% 10%;
+    --card-foreground: 130 15% 95%;
+
+    --popover: 130 25% 10%;
+    --popover-foreground: 130 15% 95%;
+
+    /* Verde mais claro no dark mode */
+    --primary: 130 40% 80%;
+    --primary-foreground: 130 60% 15%;
+
+    --secondary: 130 20% 15%;
+    --secondary-foreground: 130 15% 85%;
+
+    --muted: 130 20% 15%;
+    --muted-foreground: 130 15% 65%;
+
+    --accent: 130 25% 20%;
+    --accent-foreground: 130 15% 85%;
+
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 130 25% 20%;
+    --input: 130 25% 20%;
+    --ring: 130 40% 70%;
+    
+    /* Gradientes adaptados para dark mode */
+    --gradient-primary: linear-gradient(135deg, hsl(130 40% 75%), hsl(130 30% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(130 30% 15%), hsl(130 20% 25%));
+    --gradient-card: linear-gradient(145deg, hsl(130 25% 10%), hsl(130 20% 12%));
+    
+    /* Sombras mais suaves no dark mode */
+    --shadow-sus: 0 4px 20px -4px hsl(130 40% 5% / 0.3);
+    --shadow-card: 0 2px 15px -3px hsl(130 30% 5% / 0.2);
+    --shadow-hover: 0 8px 30px -8px hsl(130 40% 5% / 0.4);
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
